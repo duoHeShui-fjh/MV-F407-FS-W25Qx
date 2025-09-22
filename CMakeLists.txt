@@ -46,6 +46,8 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 
     # Add user sources here
+    Core/app/driver_flash.c
+
     src/lib/SFUD/sfud/port/sfud_port.c
 
     src/lib/SFUD/sfud/src/sfud.c
@@ -56,6 +58,8 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
     # Add user defined include paths
+    Core/app
+
     src/lib/SFUD/sfud/port
     src/lib/SFUD/sfud/src
     src/lib/SFUD/sfud/inc

@@ -23,7 +23,6 @@
 #include "main.h"
 #include "task.h"
 
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "gpio.h"
@@ -32,6 +31,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "driver_flash.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -146,12 +146,44 @@ void StartDefaultTask(void *argument) {
   /* USER CODE BEGIN StartDefaultTask */
   printf("Starting...v 0.1.0\n");
   sfud_init();
-  int i = 0;
+  int cnt = 0;
+
+  const driver_flash_interface_t *flash = driver_flash_get_interface();
+
+  uint8_t data[100] = {0};
+  uint32_t data_len = sizeof(data);
+
+  flash->read(0, data_len, data);
+  for (uint8_t i = 0; i < data_len; i++) {
+    printf("%d ", data[i]);
+    if (i % 10 == 9) {
+      printf("\n");
+    }
+  }
+  printf("\n");
+
+  osDelay(1000);
+  for (uint32_t i = 0; i < data_len; i++)
+    data[i] = i;
+  flash->write(0, data_len, data);
+
+  osDelay(1000);
+  flash->read(0, data_len, data);
+  for (uint8_t i = 0; i < data_len; i++) {
+    printf("%d ", data[i]);
+    if (i % 10 == 9) {
+      printf("\n");
+    }
+  }
+  printf("\n");
+
+  osDelay(1000);
+  flash->erase(0);
 
   /* Infinite loop */
   for (;;) {
-    printf("Hello World! %d\n", i);
-    i++;
+    // printf("Hello World! %d\n", cnt);
+    cnt++;
     osDelay(2000);
   }
   /* USER CODE END StartDefaultTask */
