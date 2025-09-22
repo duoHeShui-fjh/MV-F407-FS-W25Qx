@@ -19,13 +19,14 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "FreeRTOS.h"
-#include "cmsis_os.h"
-#include "main.h"
 #include "task.h"
+#include "main.h"
+#include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "gpio.h"
+#include "sfud.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -54,23 +55,23 @@
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
-    .name = "defaultTask",
-    .stack_size = 128 * 4,
-    .priority = (osPriority_t)osPriorityNormal,
+  .name = "defaultTask",
+  .stack_size = 256 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for LED_R_TASK */
 osThreadId_t LED_R_TASKHandle;
 const osThreadAttr_t LED_R_TASK_attributes = {
-    .name = "LED_R_TASK",
-    .stack_size = 128 * 4,
-    .priority = (osPriority_t)osPriorityLow,
+  .name = "LED_R_TASK",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for LED_B_TASK */
 osThreadId_t LED_B_TASKHandle;
 const osThreadAttr_t LED_B_TASK_attributes = {
-    .name = "LED_B_TASK",
-    .stack_size = 128 * 4,
-    .priority = (osPriority_t)osPriorityLow,
+  .name = "LED_B_TASK",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -86,10 +87,10 @@ extern void MX_USB_DEVICE_Init(void);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
 /**
- * @brief  FreeRTOS initialization
- * @param  None
- * @retval None
- */
+  * @brief  FreeRTOS initialization
+  * @param  None
+  * @retval None
+  */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
 
@@ -113,8 +114,7 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  defaultTaskHandle =
-      osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
   /* creation of LED_R_TASK */
   LED_R_TASKHandle = osThreadNew(os_led_r_task, NULL, &LED_R_TASK_attributes);
@@ -129,6 +129,7 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_EVENTS */
   /* add events, ... */
   /* USER CODE END RTOS_EVENTS */
+
 }
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -138,19 +139,20 @@ void MX_FREERTOS_Init(void) {
  * @retval None
  */
 /* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument) {
+void StartDefaultTask(void *argument)
+{
   /* init code for USB_DEVICE */
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN StartDefaultTask */
-  osDelay(2000);
   printf("Starting...v 0.1.0\n");
+  sfud_init();
   uint32_t i = 0;
 
   /* Infinite loop */
   for (;;) {
     printf("Hello World! %d\n", i);
     i++;
-    osDelay(500);
+    osDelay(2000);
   }
   /* USER CODE END StartDefaultTask */
 }
@@ -162,7 +164,8 @@ void StartDefaultTask(void *argument) {
  * @retval None
  */
 /* USER CODE END Header_os_led_r_task */
-void os_led_r_task(void *argument) {
+void os_led_r_task(void *argument)
+{
   /* USER CODE BEGIN os_led_r_task */
   /* Infinite loop */
   for (;;) {
@@ -179,7 +182,8 @@ void os_led_r_task(void *argument) {
  * @retval None
  */
 /* USER CODE END Header_os_led_b_task */
-void os_led_b_task(void *argument) {
+void os_led_b_task(void *argument)
+{
   /* USER CODE BEGIN os_led_b_task */
   /* Infinite loop */
   for (;;) {
@@ -193,3 +197,4 @@ void os_led_b_task(void *argument) {
 /* USER CODE BEGIN Application */
 
 /* USER CODE END Application */
+
