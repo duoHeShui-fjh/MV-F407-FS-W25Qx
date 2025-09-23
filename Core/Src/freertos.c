@@ -188,24 +188,34 @@ void StartDefaultTask(void *argument)
   flash->erase(0);
 */
 
-  // 文件系统测试
-  mkfs();
-  mnt();
+  // 安全初始化文件系统 - 保护现有数据
+  safe_init_filesystem();
 
-  char file_name[20] = "test1.txt";
+  // 创建文件夹（如果不存在的话）
+  create_directory("bin");
+  create_directory("lib");
+
+  // 创建文件
+  char file_name[20] = "bin/test4.txt";
   char file_content[100] = "Hello World!\r\nhello fatfs1\r\n";
   create_file(file_name, file_content);
-  char file_name2[20] = "test2.txt";
+  char file_name2[20] = "bin/test5.txt";
   char file_content2[100] = "Hello World!\r\nhello fatfs3\r\n";
   create_file(file_name2, file_content2);
-  char file_name3[20] = "test3.txt";
+  char file_name3[20] = "lib/test6.txt";
   char file_content3[100] = "Hello World!\r\nhello fatfs3\r\n";
   create_file(file_name3, file_content3);
 
   char read_content[100] = {0};
-  read_file("test1.txt", read_content);
+  read_file("bin/test1.txt", read_content);
 
   list_files(USERPath);
+
+  // 显示文件系统信息和目录结构
+  show_filesystem_info();
+
+  // 显示分区信息和所有路径
+  show_partition_info();
   /* Infinite loop */
   for (;;) {
     // printf("Hello World! %d\n", cnt);
