@@ -8,7 +8,7 @@
 #define LOG_INFO
 #define LOG_WARN
 #define LOG_ERROR
-#define LOG_DEBUG
+// #define LOG_DEBUG
 
 // 条件编译的日志级别宏
 #ifdef LOG_DEBUG
@@ -45,32 +45,6 @@ const driver_fs_interface_t *driver_fs_get_interface(void) {
 
 static uint8_t work_buf[_MAX_SS]; // 工作缓冲区
 FATFS fs;                         // 全局文件系统对象
-
-void mkfs(void) {
-
-  // 强制初始化磁盘
-  log_debug("Initializing disk...");
-  disk_initialize(0);
-
-  // 测试磁盘基本操作
-  log_debug("Testing disk operations...");
-  DSTATUS stat = disk_status(0);
-  log_debug("Disk status: %d", stat);
-
-  if (stat == 0) {
-    DWORD sector_count;
-    DWORD sector_size;
-    disk_ioctl(0, GET_SECTOR_COUNT, &sector_count);
-    disk_ioctl(0, GET_SECTOR_SIZE, &sector_size);
-    log_debug("Sectors: %lu, Sector size: %lu", sector_count, sector_size);
-
-    // 尝试FAT而不是FAT32
-    uint8_t res = f_mkfs(USERPath, FM_FAT, 0, work_buf, sizeof(work_buf));
-    printf("mkfs result: %d\r\n", res);
-  } else {
-    printf("Disk not ready, status: %d\r\n", stat);
-  }
-}
 
 static void init_single_filesystem(FATFS *fs_obj, const char *path,
                                    uint8_t force_reinit) {
@@ -147,11 +121,6 @@ void safe_init_filesystem(uint8_t enable_multi_drives, uint8_t force_reinit) {
   } else {
     printf("Single filesystem initialization complete\r\n");
   }
-}
-
-void mnt(void) {
-  uint8_t res = f_mount(&fs, USERPath, 1);
-  printf("mount result: %d\r\n", res);
 }
 
 FIL file;

@@ -9,10 +9,6 @@ typedef struct {
 
 const driver_fs_interface_t *driver_fs_get_interface(void);
 
-void umnt(void);
-void mkfs(void);
-void mnt(void);
-
 void safe_init_filesystem(uint8_t enable_multi_drives, uint8_t force_reinit);
 void init_filesystem(void);
 void create_directory(char *dir_name);
