@@ -33,7 +33,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "driver_flash.h"
+#include "driver_fs.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -149,23 +149,23 @@ void StartDefaultTask(void *argument)
   /* init code for USB_DEVICE */
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN StartDefaultTask */
-  sfud_init();
+  sfud_init(); // W25Qxx通用接口初始化
   int cnt = 0;
 
   // 安全初始化多文件系统 - 保护现有数据
-  safe_init_multi_filesystem();
+  safe_init_filesystem(1, 0);
 
   list_files(USERPath);
   list_files(USER1Path);
   list_files(USER2Path);
   // 显示文件系统信息和目录结构
-  // show_filesystem_info();
+  show_filesystem_info();
 
   // 演示多路径功能
   // demo_multi_paths();
 
   // 显示分区信息和所有路径
-  // show_partition_info();
+  show_partition_info();
   /* Infinite loop */
   for (;;) {
     // printf("Hello World! %d\n", cnt);

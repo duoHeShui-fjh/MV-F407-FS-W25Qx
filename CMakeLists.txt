@@ -47,6 +47,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 
     # Add user sources here
     Core/app/driver_flash.c
+    Core/app/driver_fs.c
 
     src/lib/SFUD/sfud/port/sfud_port.c
 
