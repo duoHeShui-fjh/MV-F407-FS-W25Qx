@@ -59,7 +59,7 @@
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
     .name = "defaultTask",
-    .stack_size = 2048 * 4,
+    .stack_size = 3072 * 4,
     .priority = (osPriority_t)osPriorityNormal,
 };
 /* Definitions for LED_R_TASK */
