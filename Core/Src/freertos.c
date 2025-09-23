@@ -152,20 +152,19 @@ void StartDefaultTask(void *argument)
   sfud_init(); // W25Qxx通用接口初始化
   int cnt = 0;
 
-  // 安全初始化多文件系统 - 保护现有数据
-  safe_init_filesystem(1, 0);
+  // 安全初始化文件系统 - 保护现有数据
+  safe_init_filesystem(0);
 
-  list_files(USERPath);
-  list_files(USER1Path);
-  list_files(USER2Path);
   // 显示文件系统信息和目录结构
-  show_filesystem_info();
+  show_partition_info();
+  show_directory_tree();
 
-  // 演示多路径功能
-  // demo_multi_paths();
+  // 演示文件系统功能
+  // demo_filesystem();
 
   // 显示分区信息和所有路径
-  show_partition_info();
+  osDelay(100);
+  // show_directory_tree();
   /* Infinite loop */
   for (;;) {
     // printf("Hello World! %d\n", cnt);
