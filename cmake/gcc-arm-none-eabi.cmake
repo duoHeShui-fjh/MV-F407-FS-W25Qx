@@ -40,4 +40,10 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -T \"${CMAKE_SOURCE_DIR}/S
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --specs=nano.specs")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-Map=${CMAKE_PROJECT_NAME}.map -Wl,--gc-sections")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--print-memory-usage")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--gc-sections,--no-warn-rwx-segments") # 取消 rwx 段的警告
 set(TOOLCHAIN_LINK_LIBRARIES "m")
+
+# 支持 printf 函数打印浮点数
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -u_printf_float -lm")
+# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-parameter") # 忽略 C 代码中未使用参数的警告
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter") # 忽略 C++ 代码中未使用参数的警告
