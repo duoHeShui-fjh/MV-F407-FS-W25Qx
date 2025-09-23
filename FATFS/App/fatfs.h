@@ -36,6 +36,17 @@ extern char USERPath[4]; /* USER logical drive path */
 extern FATFS USERFatFS; /* File system object for USER logical drive */
 extern FIL USERFile; /* File object for USER */
 
+/* Additional drive paths */
+extern uint8_t retUSER1; /* Return value for USER1 */
+extern char USER1Path[4]; /* USER1 logical drive path */
+extern FATFS USER1FatFS; /* File system object for USER1 logical drive */
+extern FIL USER1File; /* File object for USER1 */
+
+extern uint8_t retUSER2; /* Return value for USER2 */
+extern char USER2Path[4]; /* USER2 logical drive path */
+extern FATFS USER2FatFS; /* File system object for USER2 logical drive */
+extern FIL USER2File; /* File object for USER2 */
+
 void MX_FATFS_Init(void);
 
 /* USER CODE BEGIN Prototypes */

@@ -6,7 +6,7 @@
 #include <string.h>
 
 #define LOG_INFO
-// #define LOG_DEBUG
+#define LOG_DEBUG
 
 // 条件编译的日志级别宏
 #ifdef LOG_DEBUG
@@ -108,6 +108,45 @@ void safe_init_filesystem(void) {
       printf("Disk not ready, status: %d\n", stat);
     }
   }
+}
+
+void safe_init_multi_filesystem(void) {
+  printf("Initializing multiple file systems...\n");
+
+  // 初始化主驱动器 0:
+  safe_init_filesystem();
+
+  // 初始化drive 1:
+  printf("Initializing drive 1:...\n");
+  uint8_t mount1_res = f_mount(&USER1FatFS, USER1Path, 1);
+  if (mount1_res != FR_OK) {
+    printf("Drive 1: not mounted, creating filesystem...\n");
+    uint8_t format1_res = f_mkfs(USER1Path, FM_FAT, 0, work_buf, sizeof(work_buf));
+    printf("Drive 1: format result = %d\n", format1_res);
+    if (format1_res == FR_OK) {
+      mount1_res = f_mount(&USER1FatFS, USER1Path, 1);
+      printf("Drive 1: mount result = %d\n", mount1_res);
+    }
+  } else {
+    printf("Drive 1: mounted successfully\n");
+  }
+
+  // 初始化drive 2:
+  printf("Initializing drive 2:...\n");
+  uint8_t mount2_res = f_mount(&USER2FatFS, USER2Path, 1);
+  if (mount2_res != FR_OK) {
+    printf("Drive 2: not mounted, creating filesystem...\n");
+    uint8_t format2_res = f_mkfs(USER2Path, FM_FAT, 0, work_buf, sizeof(work_buf));
+    printf("Drive 2: format result = %d\n", format2_res);
+    if (format2_res == FR_OK) {
+      mount2_res = f_mount(&USER2FatFS, USER2Path, 1);
+      printf("Drive 2: mount result = %d\n", mount2_res);
+    }
+  } else {
+    printf("Drive 2: mounted successfully\n");
+  }
+
+  printf("Multi-filesystem initialization complete\n");
 }
 
 void mnt(void) {
@@ -216,6 +255,60 @@ void print_directory_tree(char *path, int depth) {
   }
 
   f_closedir(&dir);
+}
+
+void demo_multi_paths(void) {
+  printf("\n=== Multiple Drive Paths Demo ===\n");
+
+  // 展示不同的路径
+  printf("Available drive paths:\n");
+  printf("- %s (Primary drive)\n", USERPath);
+  printf("- %s (Secondary drive - same physical device)\n", USER1Path);
+  printf("- %s (Tertiary drive - same physical device)\n", USER2Path);
+
+  // 检查驱动器状态
+  printf("\nChecking drive status:\n");
+  printf("Drive 0: status = %d\n", disk_status(0));
+  printf("Drive 1: status = %d\n", disk_status(1));
+  printf("Drive 2: status = %d\n", disk_status(2));
+
+  // 在不同路径创建文件演示
+  printf("\nCreating files on different paths:\n");
+
+  // Drive 0: 添加主要文件
+  printf("Creating files on drive 0:...\n");
+  create_file("0:/main.txt", "Main application file on drive 0:\n");
+  create_file("0:/config.txt", "Configuration data for drive 0:\n");
+
+  // Drive 1: 添加备份文件
+  printf("Creating files on drive 1:...\n");
+  create_directory("1:/backup");
+  create_file("1:/backup.txt", "Backup file on drive 1:\n");
+  create_file("1:/backup/data1.txt", "Backup data 1 on drive 1:\n");
+  create_file("1:/backup/data2.txt", "Backup data 2 on drive 1:\n");
+  create_file("1:/settings.txt", "Settings backup on drive 1:\n");
+
+  // Drive 2: 添加临时文件
+  printf("Creating files on drive 2:...\n");
+  create_directory("2:/temp");
+  create_directory("2:/logs");
+  create_file("2:/temp.txt", "Temporary file on drive 2:\n");
+  create_file("2:/temp/work1.txt", "Temp work file 1 on drive 2:\n");
+  create_file("2:/temp/work2.txt", "Temp work file 2 on drive 2:\n");
+  create_file("2:/logs/system.log", "System log on drive 2:\n");
+  create_file("2:/logs/error.log", "Error log on drive 2:\n");
+
+  printf("\nListing files on each drive:\n");
+  printf("Drive 0: files:\n");
+  list_files("0:/");
+  printf("Drive 1: files:\n");
+  list_files("1:/");
+  printf("Drive 2: files:\n");
+  list_files("2:/");
+
+  printf("\nFiles created on multiple logical drives\n");
+  printf("Note: All drives currently point to the same physical W25Q64\n");
+  printf("=============================\n");
 }
 
 void show_partition_info(void) {
@@ -329,7 +422,8 @@ void show_filesystem_info(void) {
   }
 
   printf("\n=== Directory Structure ===\n");
-  print_directory_tree("/", 0);
+  // print_directory_tree("/", 0);  // 暂时注释掉，可能导致卡死
+  printf("Directory tree disabled for debugging\n");
   printf("=============================\n");
 }
 

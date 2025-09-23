@@ -18,6 +18,7 @@ void umnt(void);
 void mkfs(void);
 void mnt(void);
 void safe_init_filesystem(void);
+void safe_init_multi_filesystem(void);
 void init_filesystem(void);
 void create_directory(char *dir_name);
 void create_file(char *file_name, char *file_content);
@@ -25,5 +26,6 @@ void list_files(char *path);
 void read_file(char *file_name, char *file_content);
 void show_filesystem_info(void);
 void show_partition_info(void);
+void demo_multi_paths(void);
 void print_directory_tree(char *path, int depth);
 #endif    // __DRIVER_FLASH_H__

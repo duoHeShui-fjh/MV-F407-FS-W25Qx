@@ -17,11 +17,23 @@
   */
 /* USER CODE END Header */
 #include "fatfs.h"
+#include <stdio.h>
 
 uint8_t retUSER;    /* Return value for USER */
-char USERPath[4] = "\\"; /* USER logical drive path */
+char USERPath[4] = "0:"; /* USER logical drive path */
 FATFS USERFatFS;    /* File system object for USER logical drive */
 FIL USERFile;       /* File object for USER */
+
+/* Additional drive paths */
+uint8_t retUSER1;    /* Return value for USER1 */
+char USER1Path[4] = "1:"; /* USER1 logical drive path */
+FATFS USER1FatFS;    /* File system object for USER1 logical drive */
+FIL USER1File;       /* File object for USER1 */
+
+uint8_t retUSER2;    /* Return value for USER2 */
+char USER2Path[4] = "2:"; /* USER2 logical drive path */
+FATFS USER2FatFS;    /* File system object for USER2 logical drive */
+FIL USER2File;       /* File object for USER2 */
 
 /* USER CODE BEGIN Variables */
 
@@ -33,7 +45,14 @@ void MX_FATFS_Init(void)
   retUSER = FATFS_LinkDriver(&USER_Driver, USERPath);
 
   /* USER CODE BEGIN Init */
-  /* additional user code for init */
+  /* Link additional drivers for multi-path support */
+  retUSER1 = FATFS_LinkDriver(&USER_Driver, USER1Path);
+  retUSER2 = FATFS_LinkDriver(&USER_Driver, USER2Path);
+
+  printf("FatFS drivers linked:\n");
+  printf("- Drive %s: %s\n", USERPath, retUSER == 0 ? "OK" : "FAILED");
+  printf("- Drive %s: %s\n", USER1Path, retUSER1 == 0 ? "OK" : "FAILED");
+  printf("- Drive %s: %s\n", USER2Path, retUSER2 == 0 ? "OK" : "FAILED");
   /* USER CODE END Init */
 }
 

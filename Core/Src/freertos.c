@@ -188,8 +188,8 @@ void StartDefaultTask(void *argument)
   flash->erase(0);
 */
 
-  // 安全初始化文件系统 - 保护现有数据
-  safe_init_filesystem();
+  // 安全初始化多文件系统 - 保护现有数据
+  safe_init_multi_filesystem();
 
   // 创建文件夹（如果不存在的话）
   create_directory("bin");
@@ -213,6 +213,9 @@ void StartDefaultTask(void *argument)
 
   // 显示文件系统信息和目录结构
   show_filesystem_info();
+
+  // 演示多路径功能
+  demo_multi_paths();
 
   // 显示分区信息和所有路径
   show_partition_info();
