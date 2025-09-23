@@ -1,20 +1,21 @@
 /* USER CODE BEGIN Header */
 /**
  ******************************************************************************
-  * @file    user_diskio.c
-  * @brief   This file includes a diskio driver skeleton to be completed by the user.
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ * @file    user_diskio.c
+ * @brief   This file includes a diskio driver skeleton to be completed by the
+ *user.
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2025 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
  /* USER CODE END Header */
 
 #ifdef USE_OBSOLETE_USER_CODE_SECTION_0
@@ -33,9 +34,19 @@
 /* USER CODE BEGIN DECL */
 
 /* Includes ------------------------------------------------------------------*/
-#include <string.h>
 #include "ff_gen_drv.h"
+#include "sfud.h"
+#include <stdio.h>
+#include <string.h>
 
+// 条件编译的日志级别宏
+#define SECTOR_SIZE _MAX_SS
+
+#ifdef LOG_DEBUG
+#define log_debug(format, ...) printf("[d]:" format "\r\n", ##__VA_ARGS__)
+#else
+#define log_debug(format, ...)
+#endif
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 
@@ -81,8 +92,17 @@ DSTATUS USER_initialize (
 )
 {
   /* USER CODE BEGIN INIT */
+  const sfud_flash *flash = sfud_get_device(0);
+  log_debug("USER_initialize: flash = %p", flash);
+  if (flash != NULL) {
+    Stat &= ~STA_NOINIT; // 清除未初始化标志
+    log_debug("Disk initialized successfully");
+  } else {
     Stat = STA_NOINIT;
-    return Stat;
+    log_debug("Flash device not found");
+  }
+  log_debug("Disk status after init: %d", Stat);
+  return Stat;
   /* USER CODE END INIT */
 }
 
@@ -96,8 +116,7 @@ DSTATUS USER_status (
 )
 {
   /* USER CODE BEGIN STATUS */
-    Stat = STA_NOINIT;
-    return Stat;
+  return Stat;
   /* USER CODE END STATUS */
 }
 
@@ -117,7 +136,10 @@ DRESULT USER_read (
 )
 {
   /* USER CODE BEGIN READ */
-    return RES_OK;
+  const sfud_flash *flash = sfud_get_device(0);
+  uint32_t read_addr = sector * SECTOR_SIZE; // sector * 4096字节
+  sfud_err result = sfud_read(flash, read_addr, count * SECTOR_SIZE, buff);
+  return (result == SFUD_SUCCESS) ? RES_OK : RES_ERROR;
   /* USER CODE END READ */
 }
 
@@ -138,8 +160,11 @@ DRESULT USER_write (
 )
 {
   /* USER CODE BEGIN WRITE */
-  /* USER CODE HERE */
-    return RES_OK;
+  const sfud_flash *flash = sfud_get_device(0);
+  uint32_t write_addr = sector * SECTOR_SIZE; // sector * 4096字节
+  sfud_err result =
+      sfud_erase_write(flash, write_addr, count * SECTOR_SIZE, buff);
+  return (result == SFUD_SUCCESS) ? RES_OK : RES_ERROR;
   /* USER CODE END WRITE */
 }
 #endif /* _USE_WRITE == 1 */
@@ -159,8 +184,29 @@ DRESULT USER_ioctl (
 )
 {
   /* USER CODE BEGIN IOCTL */
-    DRESULT res = RES_ERROR;
-    return res;
+  DRESULT res = RES_ERROR;
+  switch (cmd) {
+  case CTRL_SYNC: {
+    res = RES_OK;
+    break;
+  } break;
+  case GET_SECTOR_COUNT: {
+    *((DWORD *)buff) = 16777216 / SECTOR_SIZE; // 16MB / 4096字节 = 4096扇区
+    res = RES_OK;
+  } break;
+  case GET_SECTOR_SIZE: {
+    *((DWORD *)buff) = SECTOR_SIZE; // 4096字节扇区
+    res = RES_OK;
+  } break;
+  case GET_BLOCK_SIZE: {
+    *((DWORD *)buff) = 4096 / SECTOR_SIZE; // Flash擦除块是4KB，
+    res = RES_OK;
+  } break;
+  default: {
+    res = RES_PARERR;
+  } break;
+  }
+  return res;
   /* USER CODE END IOCTL */
 }
 #endif /* _USE_IOCTL == 1 */

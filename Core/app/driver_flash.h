@@ -14,4 +14,10 @@ typedef struct {
 const driver_flash_interface_t *driver_flash_get_interface(void);
 
 
+void umnt(void);
+void mkfs(void);
+void mnt(void);
+void create_file(char *file_name, char *file_content);
+void list_files(char *path);
+void read_file(char *file_name, char *file_content);
 #endif    // __DRIVER_FLASH_H__

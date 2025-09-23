@@ -19,15 +19,17 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "FreeRTOS.h"
-#include "cmsis_os.h"
-#include "main.h"
 #include "task.h"
+#include "main.h"
+#include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "diskio.h"
+#include "fatfs.h"
+#include "ffconf.h"
 #include "gpio.h"
 #include "sfud.h"
-
 #include <stdint.h>
 #include <stdio.h>
 
@@ -56,23 +58,23 @@
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
-    .name = "defaultTask",
-    .stack_size = 256 * 4,
-    .priority = (osPriority_t)osPriorityNormal,
+  .name = "defaultTask",
+  .stack_size = 1024 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for LED_R_TASK */
 osThreadId_t LED_R_TASKHandle;
 const osThreadAttr_t LED_R_TASK_attributes = {
-    .name = "LED_R_TASK",
-    .stack_size = 128 * 4,
-    .priority = (osPriority_t)osPriorityLow,
+  .name = "LED_R_TASK",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for LED_B_TASK */
 osThreadId_t LED_B_TASKHandle;
 const osThreadAttr_t LED_B_TASK_attributes = {
-    .name = "LED_B_TASK",
-    .stack_size = 128 * 4,
-    .priority = (osPriority_t)osPriorityLow,
+  .name = "LED_B_TASK",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -88,10 +90,10 @@ extern void MX_USB_DEVICE_Init(void);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
 /**
- * @brief  FreeRTOS initialization
- * @param  None
- * @retval None
- */
+  * @brief  FreeRTOS initialization
+  * @param  None
+  * @retval None
+  */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
 
@@ -115,8 +117,7 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  defaultTaskHandle =
-      osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
   /* creation of LED_R_TASK */
   LED_R_TASKHandle = osThreadNew(os_led_r_task, NULL, &LED_R_TASK_attributes);
@@ -131,16 +132,20 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_EVENTS */
   /* add events, ... */
   /* USER CODE END RTOS_EVENTS */
+
 }
 
 /* USER CODE BEGIN Header_StartDefaultTask */
 /**
  * @brief  Function implementing the defaultTask thread.
- * @param  argument: Not used
+ * @param    printf("Initializing filesystem...\n");
+  init_filesystem();
+argument: Not used
  * @retval None
  */
 /* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument) {
+void StartDefaultTask(void *argument)
+{
   /* init code for USB_DEVICE */
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN StartDefaultTask */
@@ -148,6 +153,8 @@ void StartDefaultTask(void *argument) {
   sfud_init();
   int cnt = 0;
 
+  // SFUD测试
+  /*
   const driver_flash_interface_t *flash = driver_flash_get_interface();
 
   uint8_t data[100] = {0};
@@ -179,7 +186,26 @@ void StartDefaultTask(void *argument) {
 
   osDelay(1000);
   flash->erase(0);
+*/
 
+  // 文件系统测试
+  mkfs();
+  mnt();
+
+  char file_name[20] = "test1.txt";
+  char file_content[100] = "Hello World!\r\nhello fatfs1\r\n";
+  create_file(file_name, file_content);
+  char file_name2[20] = "test2.txt";
+  char file_content2[100] = "Hello World!\r\nhello fatfs3\r\n";
+  create_file(file_name2, file_content2);
+  char file_name3[20] = "test3.txt";
+  char file_content3[100] = "Hello World!\r\nhello fatfs3\r\n";
+  create_file(file_name3, file_content3);
+
+  char read_content[100] = {0};
+  read_file("test1.txt", read_content);
+
+  list_files(USERPath);
   /* Infinite loop */
   for (;;) {
     // printf("Hello World! %d\n", cnt);
@@ -196,7 +222,8 @@ void StartDefaultTask(void *argument) {
  * @retval None
  */
 /* USER CODE END Header_os_led_r_task */
-void os_led_r_task(void *argument) {
+void os_led_r_task(void *argument)
+{
   /* USER CODE BEGIN os_led_r_task */
   /* Infinite loop */
   for (;;) {
@@ -213,7 +240,8 @@ void os_led_r_task(void *argument) {
  * @retval None
  */
 /* USER CODE END Header_os_led_b_task */
-void os_led_b_task(void *argument) {
+void os_led_b_task(void *argument)
+{
   /* USER CODE BEGIN os_led_b_task */
   /* Infinite loop */
   for (;;) {
@@ -227,3 +255,4 @@ void os_led_b_task(void *argument) {
 /* USER CODE BEGIN Application */
 
 /* USER CODE END Application */
+
