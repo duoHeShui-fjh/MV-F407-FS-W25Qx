@@ -16,6 +16,10 @@ static uint8_t work_buf[_MAX_SS]; // 工作缓冲区
 FATFS fs;                         // 全局文件系统对象
 FIL file;                         // 全局文件对象
 
+// 全局缓冲区减少栈使用
+static char g_full_path[64];
+static char g_file_content[32];
+
 // =========================== 基本文件操作函数 ===========================
 
 // 同步文件系统缓存
@@ -202,12 +206,10 @@ void print_directory_tree(char *path, int depth) {
 void print_all_file_contents(char *path, int depth) {
   DIR dir;
   FILINFO info;
-  char full_path[128];
-  char file_content[64]; // 减小缓冲区
   UINT bytes_read = 0;
 
   // 限制递归深度防止栈溢出
-  if (depth > 5) {
+  if (depth > 3) {
     printf("Maximum depth reached, skipping deeper directories\r\n");
     return;
   }
@@ -233,25 +235,25 @@ void print_all_file_contents(char *path, int depth) {
 
       // 构建完整路径
       if (strcmp(path, USERPath) == 0)
-        snprintf(full_path, sizeof(full_path), "/%s", info.fname);
+        snprintf(g_full_path, sizeof(g_full_path), "/%s", info.fname);
       else
-        snprintf(full_path, sizeof(full_path), "%s/%s", path, info.fname);
+        snprintf(g_full_path, sizeof(g_full_path), "%s/%s", path, info.fname);
 
-      printf("Entering directory: %s\r\n", full_path);
+      printf("Entering directory: %s\r\n", g_full_path);
       // 递归遍历子目录
-      print_all_file_contents(full_path, depth + 1);
-      printf("Exiting directory: %s\r\n", full_path);
+      print_all_file_contents(g_full_path, depth + 1);
+      printf("Exiting directory: %s\r\n", g_full_path);
     } else {
-      // 构建完整文件路12径
+      // 构建完整文件路径
       if (strcmp(path, USERPath) == 0)
-        snprintf(full_path, sizeof(full_path), "/%s", info.fname);
+        snprintf(g_full_path, sizeof(g_full_path), "/%s", info.fname);
       else
-        snprintf(full_path, sizeof(full_path), "%s/%s", path, info.fname);
+        snprintf(g_full_path, sizeof(g_full_path), "%s/%s", path, info.fname);
 
       printf("[FILE] %s (%lu bytes):\r\n", info.fname, info.fsize);
 
       // 跳过过大的文件以避免内存问题
-      if (info.fsize > 1024) {
+      if (info.fsize > 100) {
         for (int i = 0; i <= depth; i++)
           printf("  ");
         printf("Content: [File too large, skipped]\r\n");
@@ -260,22 +262,22 @@ void print_all_file_contents(char *path, int depth) {
 
       // 打印文件内容
       FIL file;
-      res = f_open(&file, full_path, FA_READ);
+      res = f_open(&file, g_full_path, FA_READ);
       if (res == FR_OK) {
         // 限制读取大小
-        UINT read_size = (info.fsize > sizeof(file_content) - 1)
-                             ? sizeof(file_content) - 1
+        UINT read_size = (info.fsize > sizeof(g_file_content) - 1)
+                             ? sizeof(g_file_content) - 1
                              : info.fsize;
 
-        res = f_read(&file, file_content, read_size, &bytes_read);
+        res = f_read(&file, g_file_content, read_size, &bytes_read);
         if (res == FR_OK) {
-          file_content[bytes_read] = '\0';
+          g_file_content[bytes_read] = '\0';
 
           for (int i = 0; i <= depth; i++)
             printf("  ");
-          printf("Content: %s", file_content);
+          printf("Content: %s", g_file_content);
 
-          if (info.fsize > sizeof(file_content) - 1)
+          if (info.fsize > sizeof(g_file_content) - 1)
             printf("... (truncated)\r\n");
           else
             printf("\r\n");
@@ -290,6 +292,8 @@ void print_all_file_contents(char *path, int depth) {
           printf("  ");
         printf("Error opening file: %d\r\n", res);
       }
+      // 添加延时
+      osDelay(5);
     }
   }
 
