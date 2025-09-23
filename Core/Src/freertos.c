@@ -58,9 +58,9 @@
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
-    .name = "defaultTask",
-    .stack_size = 3072 * 4,
-    .priority = (osPriority_t)osPriorityNormal,
+  .name = "defaultTask",
+  .stack_size = 6000 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for LED_R_TASK */
 osThreadId_t LED_R_TASKHandle;
@@ -163,10 +163,9 @@ void StartDefaultTask(void *argument)
 
   // 演示文件系统功能
   demo_filesystem();
-
   // // 显示分区信息和所有路径
   // osDelay(100);
-  show_partition_info();
+  // show_partition_info();
   show_directory_tree(NULL);
   show_all_file_contents(NULL);
   /* Infinite loop */

@@ -43,17 +43,18 @@ void create_directory(char *dir_name) {
 void create_file(char *file_name, char *file_content) {
   log_info("Creating file: %s", file_name);
   UINT bwritten = 0;
-  uint8_t res = f_open(&file, file_name, FA_WRITE | FA_CREATE_ALWAYS);
+  FIL local_file;
+  uint8_t res = f_open(&local_file, file_name, FA_WRITE | FA_CREATE_ALWAYS);
 
   if (res == FR_OK) {
     log_debug("File opened");
-    res = f_write(&file, file_content, strlen(file_content), &bwritten);
+    res = f_write(&local_file, file_content, strlen(file_content), &bwritten);
     if (res == FR_OK)
       log_debug("File written: %u bytes", bwritten);
     else
       log_warn("Write failed: %d", res);
 
-    f_close(&file);
+    f_close(&local_file);
   } else
     log_error("Open file failed: %d", res);
 }
@@ -207,7 +208,7 @@ void print_all_file_contents(char *path, int depth) {
   UINT bytes_read = 0;
 
   // 限制递归深度防止栈溢出
-  if (depth > 3) {
+  if (depth > 5) {
     printf("Maximum depth reached, skipping deeper directories\r\n");
     return;
   }
@@ -307,26 +308,44 @@ void demo_filesystem(void) {
 
   // 创建主要文件
   printf("Creating main files...\r\n");
-  create_file("/main.txt", "Main application file\r\n");
-  create_file("/config.txt", "Configuration data\r\n");
+  create_file("0:/main.txt", "Main application file\r\n");
+  create_file("0:/config.txt", "Configuration data\r\n");
 
   // 创建备份目录和文件
   printf("Creating backup directory...\r\n");
   create_directory("/backup");
-  create_file("/backup.txt", "Backup file\r\n");
-  create_file("/backup/data1.txt", "Backup data 1\r\n");
-  create_file("/backup/data2.txt", "Backup data 2\r\n");
-  create_file("/settings.txt", "Settings backup\r\n");
+  create_directory("/abc");
+  create_directory("/1");
+  create_directory("/1/2");
+  create_directory("/1/2/3");
+  create_directory("/1/2/4");
+  create_directory("/1/2/4/5");
+
+  create_directory("/1/3");
+  create_directory("/1/4");
+  create_directory("/1/5");
+
+  // create_file("/backup.txt", "Backup file\r\n");
+  // create_file("/backup/data1.txt", "Backup data 1\r\n");
+  // create_file("/backup/data2.txt", "Backup data 2\r\n");
+  // create_file("/settings.txt", "Settings backup\r\n");
+  // create_file("1:/set2.txt", "Settings2 backup\r\n");
+  // create_file("2:/set3.txt", "Settings3 backup\r\n");
+  // create_file("0:/set4.txt", "Settings4 backup\r\n");
+  // create_file("0:/abc/set5.txt", "Settings5 backup\r\n");
+  create_file("/1/set6.txt", "Settings6 backup\r\n");
+  create_file("/1/2/set7.txt", "Settings7 backup\r\n");
+  create_file("/1/2/3/set7.txt", "Settings7 backup\r\n");
 
   // 创建临时目录和文件
-  printf("Creating temp directories...\r\n");
-  create_directory("/temp");
-  create_directory("/logs");
-  create_file("/temp.txt", "Temporary file\r\n");
-  create_file("/temp/work1.txt", "Temp work file 1\r\n");
-  create_file("/temp/work2.txt", "Temp work file 2\r\n");
-  create_file("/logs/system.log", "System log\r\n");
-  create_file("/logs/error.log", "Error log\r\n");
+  // printf("Creating temp directories...\r\n");
+  // create_directory("/temp");
+  // create_directory("/logs");
+  // create_file("/temp.txt", "Temporary file\r\n");
+  // create_file("/temp/work1.txt", "Temp work file 1\r\n");
+  // create_file("/temp/work2.txt", "Temp work file 2\r\n");
+  // create_file("/logs/system.log", "System log\r\n");
+  // create_file("/logs/error.log", "Error log\r\n");
 
   sync_filesystem(); // 同步文件系统缓存以确保能看到所有文件
 }

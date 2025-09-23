@@ -17,12 +17,23 @@
   */
 /* USER CODE END Header */
 #include "fatfs.h"
-#include <stdio.h>
 
-uint8_t retUSER;        /* Return value for USER */
-char USERPath[1] = "/"; /* USER logical drive path */
-FATFS USERFatFS;        /* File system object for USER logical drive */
-FIL USERFile;           /* File object for USER */
+uint8_t retUSER;    /* Return value for USER */
+char USERPath[4];   /* USER logical drive path */
+FATFS USERFatFS;    /* File system object for USER logical drive */
+FIL USERFile;       /* File object for USER */
+
+/* USER CODE BEGIN VolToPart */
+/* Volume - Partition resolution table should be user defined in case of Multiple partition */
+/* When multi-partition feature is enabled (1), each logical drive number is bound to arbitrary physical drive and partition
+listed in the VolToPart[] */
+
+PARTITION VolToPart[] = {
+    {0, 1},    /* 逻辑驱动器 0: -> 物理驱动器 0, 分区 1 */
+    {0, 2},    /* 逻辑驱动器 1: -> 物理驱动器 0, 分区 2 */
+    {0, 3}     /* 逻辑驱动器 2: -> 物理驱动器 0, 分区 3 */
+};
+/* USER CODE END VolToPart */
 
 /* USER CODE BEGIN Variables */
 
