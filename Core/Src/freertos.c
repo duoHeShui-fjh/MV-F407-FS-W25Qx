@@ -149,76 +149,23 @@ void StartDefaultTask(void *argument)
   /* init code for USB_DEVICE */
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN StartDefaultTask */
-  printf("Starting...v 0.1.0\n");
   sfud_init();
   int cnt = 0;
-
-  // SFUD测试
-  /*
-  const driver_flash_interface_t *flash = driver_flash_get_interface();
-
-  uint8_t data[100] = {0};
-  uint32_t data_len = sizeof(data);
-
-  flash->read(0, data_len, data);
-  for (uint8_t i = 0; i < data_len; i++) {
-    printf("%d ", data[i]);
-    if (i % 10 == 9) {
-      printf("\n");
-    }
-  }
-  printf("\n");
-
-  osDelay(1000);
-  for (uint32_t i = 0; i < data_len; i++)
-    data[i] = i;
-  flash->write(0, data_len, data);
-
-  osDelay(1000);
-  flash->read(0, data_len, data);
-  for (uint8_t i = 0; i < data_len; i++) {
-    printf("%d ", data[i]);
-    if (i % 10 == 9) {
-      printf("\n");
-    }
-  }
-  printf("\n");
-
-  osDelay(1000);
-  flash->erase(0);
-*/
 
   // 安全初始化多文件系统 - 保护现有数据
   safe_init_multi_filesystem();
 
-  // 创建文件夹（如果不存在的话）
-  create_directory("bin");
-  create_directory("lib");
-
-  // 创建文件
-  char file_name[20] = "bin/test4.txt";
-  char file_content[100] = "Hello World!\r\nhello fatfs1\r\n";
-  create_file(file_name, file_content);
-  char file_name2[20] = "bin/test5.txt";
-  char file_content2[100] = "Hello World!\r\nhello fatfs3\r\n";
-  create_file(file_name2, file_content2);
-  char file_name3[20] = "lib/test6.txt";
-  char file_content3[100] = "Hello World!\r\nhello fatfs3\r\n";
-  create_file(file_name3, file_content3);
-
-  char read_content[100] = {0};
-  read_file("bin/test1.txt", read_content);
-
   list_files(USERPath);
-
+  list_files(USER1Path);
+  list_files(USER2Path);
   // 显示文件系统信息和目录结构
-  show_filesystem_info();
+  // show_filesystem_info();
 
   // 演示多路径功能
-  demo_multi_paths();
+  // demo_multi_paths();
 
   // 显示分区信息和所有路径
-  show_partition_info();
+  // show_partition_info();
   /* Infinite loop */
   for (;;) {
     // printf("Hello World! %d\n", cnt);

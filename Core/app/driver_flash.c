@@ -48,7 +48,7 @@ const driver_flash_interface_t *driver_flash_get_interface(void) {
 }
 
 static uint8_t work_buf[_MAX_SS]; // 工作缓冲区
-FATFS fs;  // 全局文件系统对象
+FATFS fs;                         // 全局文件系统对象
 
 void mkfs(void) {
 
@@ -70,9 +70,9 @@ void mkfs(void) {
 
     // 尝试FAT而不是FAT32
     uint8_t res = f_mkfs(USERPath, FM_FAT, 0, work_buf, sizeof(work_buf));
-    printf("mkfs result: %d\n", res);
+    printf("mkfs result: %d\r\n", res);
   } else {
-    printf("Disk not ready, status: %d\n", stat);
+    printf("Disk not ready, status: %d\r\n", stat);
   }
 }
 
@@ -87,71 +87,74 @@ void safe_init_filesystem(void) {
 
   if (mount_res == FR_OK) {
     log_info("Existing filesystem found and mounted successfully");
-    printf("Filesystem already exists - preserving data\n");
+    printf("Filesystem already exists - preserving data\r\n");
   } else {
     log_info("No valid filesystem found, creating new one...");
-    printf("Creating new filesystem...\n");
+    printf("Creating new filesystem...\r\n");
 
     // 测试磁盘状态
     DSTATUS stat = disk_status(0);
     if (stat == 0) {
       // 创建新的文件系统
-      uint8_t format_res = f_mkfs(USERPath, FM_FAT, 0, work_buf, sizeof(work_buf));
-      printf("Format result: %d\n", format_res);
+      uint8_t format_res =
+          f_mkfs(USERPath, FM_FAT, 0, work_buf, sizeof(work_buf));
+      printf("Format result: %d\r\n", format_res);
 
       if (format_res == FR_OK) {
         // 重新挂载新创建的文件系统
         mount_res = f_mount(&fs, USERPath, 1);
-        printf("Mount result: %d\n", mount_res);
+        printf("Mount result: %d\r\n", mount_res);
       }
     } else {
-      printf("Disk not ready, status: %d\n", stat);
+      printf("Disk not ready, status: %d\r\n", stat);
     }
   }
 }
 
 void safe_init_multi_filesystem(void) {
-  printf("Initializing multiple file systems...\n");
+  printf("Initializing multiple file systems...\r\n");
 
   // 初始化主驱动器 0:
   safe_init_filesystem();
 
   // 初始化drive 1:
-  printf("Initializing drive 1:...\n");
+  printf("Initializing drive 1:...\r\n");
   uint8_t mount1_res = f_mount(&USER1FatFS, USER1Path, 1);
   if (mount1_res != FR_OK) {
-    printf("Drive 1: not mounted, creating filesystem...\n");
-    uint8_t format1_res = f_mkfs(USER1Path, FM_FAT, 0, work_buf, sizeof(work_buf));
-    printf("Drive 1: format result = %d\n", format1_res);
+    printf("Drive 1: not mounted, creating filesystem...\r\n");
+    uint8_t format1_res =
+        f_mkfs(USER1Path, FM_FAT, 0, work_buf, sizeof(work_buf));
+    printf("Drive 1: format result = %d\r\n", format1_res);
     if (format1_res == FR_OK) {
       mount1_res = f_mount(&USER1FatFS, USER1Path, 1);
-      printf("Drive 1: mount result = %d\n", mount1_res);
+      printf("Drive 1: mount result = %d\r\n", mount1_res);
     }
   } else {
-    printf("Drive 1: mounted successfully\n");
+    printf("Drive 1: mounted successfully\r\n");
   }
 
   // 初始化drive 2:
-  printf("Initializing drive 2:...\n");
+  printf("Initializing drive 2:...\r\n");
   uint8_t mount2_res = f_mount(&USER2FatFS, USER2Path, 1);
   if (mount2_res != FR_OK) {
-    printf("Drive 2: not mounted, creating filesystem...\n");
-    uint8_t format2_res = f_mkfs(USER2Path, FM_FAT, 0, work_buf, sizeof(work_buf));
-    printf("Drive 2: format result = %d\n", format2_res);
+    printf("Drive 2: not mounted, creating filesystem...\r\n");
+    uint8_t format2_res =
+        f_mkfs(USER2Path, FM_FAT, 0, work_buf, sizeof(work_buf));
+    printf("Drive 2: format result = %d\r\n", format2_res);
     if (format2_res == FR_OK) {
       mount2_res = f_mount(&USER2FatFS, USER2Path, 1);
-      printf("Drive 2: mount result = %d\n", mount2_res);
+      printf("Drive 2: mount result = %d\r\n", mount2_res);
     }
   } else {
-    printf("Drive 2: mounted successfully\n");
+    printf("Drive 2: mounted successfully\r\n");
   }
 
-  printf("Multi-filesystem initialization complete\n");
+  printf("Multi-filesystem initialization complete\r\n");
 }
 
 void mnt(void) {
   uint8_t res = f_mount(&fs, USERPath, 1);
-  printf("mount result: %d\n", res);
+  printf("mount result: %d\r\n", res);
 }
 
 FIL file;
@@ -191,13 +194,13 @@ void read_file(char *file_name, char *file_content) {
                  &bytes_read); // 读取最多99字节，留1字节给'\0'
     log_debug("read file result: %d, bytes read: %u", res, bytes_read);
     file_content[bytes_read] = '\0'; // 添加字符串结束符
-    printf("%s\n", file_content);
+    printf("%s\r\n", file_content);
     f_close(&file);
   }
 }
 
 void list_files(char *path) {
-  printf("file list:\n");
+  printf("file list:\r\n");
   FILINFO info;
   DIR dir;
   FRESULT res;
@@ -207,7 +210,7 @@ void list_files(char *path) {
       res = f_readdir(&dir, &info);
       if (res != FR_OK || info.fname[0] == 0)
         break;
-      printf("%s\n", info.fname);
+      printf("%s\r\n", info.fname);
     }
   }
   f_closedir(&dir);
@@ -221,7 +224,7 @@ void print_directory_tree(char *path, int depth) {
 
   FRESULT res = f_opendir(&dir, path);
   if (res != FR_OK) {
-    printf("Failed to open directory: %s (error: %d)\n", path, res);
+    printf("Failed to open directory: %s (error: %d)\r\n", path, res);
     return;
   }
 
@@ -237,7 +240,7 @@ void print_directory_tree(char *path, int depth) {
 
     // 检查是否是目录
     if (info.fattrib & AM_DIR) {
-      printf("[DIR] %s/\n", info.fname);
+      printf("[DIR] %s/\r\n", info.fname);
 
       // 构建完整路径
       if (strcmp(path, "/") == 0) {
@@ -250,7 +253,7 @@ void print_directory_tree(char *path, int depth) {
       print_directory_tree(full_path, depth + 1);
     } else {
       // 显示文件大小
-      printf("[FILE] %s (%lu bytes)\n", info.fname, info.fsize);
+      printf("[FILE] %s (%lu bytes)\r\n", info.fname, info.fsize);
     }
   }
 
@@ -258,69 +261,69 @@ void print_directory_tree(char *path, int depth) {
 }
 
 void demo_multi_paths(void) {
-  printf("\n=== Multiple Drive Paths Demo ===\n");
+  printf("\r\n=== Multiple Drive Paths Demo ===\r\n");
 
   // 展示不同的路径
-  printf("Available drive paths:\n");
-  printf("- %s (Primary drive)\n", USERPath);
-  printf("- %s (Secondary drive - same physical device)\n", USER1Path);
-  printf("- %s (Tertiary drive - same physical device)\n", USER2Path);
+  printf("Available drive paths:\r\n");
+  printf("- %s (Primary drive)\r\n", USERPath);
+  printf("- %s (Secondary drive - same physical device)\r\n", USER1Path);
+  printf("- %s (Tertiary drive - same physical device)\r\n", USER2Path);
 
   // 检查驱动器状态
-  printf("\nChecking drive status:\n");
-  printf("Drive 0: status = %d\n", disk_status(0));
-  printf("Drive 1: status = %d\n", disk_status(1));
-  printf("Drive 2: status = %d\n", disk_status(2));
+  printf("\r\nChecking drive status:\r\n");
+  printf("Drive 0: status = %d\r\n", disk_status(0));
+  printf("Drive 1: status = %d\r\n", disk_status(1));
+  printf("Drive 2: status = %d\r\n", disk_status(2));
 
   // 在不同路径创建文件演示
-  printf("\nCreating files on different paths:\n");
+  printf("\r\nCreating files on different paths:\r\n");
 
   // Drive 0: 添加主要文件
-  printf("Creating files on drive 0:...\n");
-  create_file("0:/main.txt", "Main application file on drive 0:\n");
-  create_file("0:/config.txt", "Configuration data for drive 0:\n");
+  printf("Creating files on drive 0:...\r\n");
+  create_file("c:/main.txt", "Main application file on drive c:\r\n");
+  create_file("c:/config.txt", "Configuration data for drive c:\r\n");
 
   // Drive 1: 添加备份文件
-  printf("Creating files on drive 1:...\n");
+  printf("Creating files on drive 1:...\r\n");
   create_directory("1:/backup");
-  create_file("1:/backup.txt", "Backup file on drive 1:\n");
-  create_file("1:/backup/data1.txt", "Backup data 1 on drive 1:\n");
-  create_file("1:/backup/data2.txt", "Backup data 2 on drive 1:\n");
-  create_file("1:/settings.txt", "Settings backup on drive 1:\n");
+  create_file("1:/backup.txt", "Backup file on drive 1:\r\n");
+  create_file("1:/backup/data1.txt", "Backup data 1 on drive 1:\r\n");
+  create_file("1:/backup/data2.txt", "Backup data 2 on drive 1:\r\n");
+  create_file("1:/settings.txt", "Settings backup on drive 1:\r\n");
 
   // Drive 2: 添加临时文件
-  printf("Creating files on drive 2:...\n");
+  printf("Creating files on drive 2:...\r\n");
   create_directory("2:/temp");
   create_directory("2:/logs");
-  create_file("2:/temp.txt", "Temporary file on drive 2:\n");
-  create_file("2:/temp/work1.txt", "Temp work file 1 on drive 2:\n");
-  create_file("2:/temp/work2.txt", "Temp work file 2 on drive 2:\n");
-  create_file("2:/logs/system.log", "System log on drive 2:\n");
-  create_file("2:/logs/error.log", "Error log on drive 2:\n");
+  create_file("2:/temp.txt", "Temporary file on drive 2:\r\n");
+  create_file("2:/temp/work1.txt", "Temp work file 1 on drive 2:\r\n");
+  create_file("2:/temp/work2.txt", "Temp work file 2 on drive 2:\r\n");
+  create_file("2:/logs/system.log", "System log on drive 2:\r\n");
+  create_file("2:/logs/error.log", "Error log on drive 2:\r\n");
 
-  printf("\nListing files on each drive:\n");
-  printf("Drive 0: files:\n");
+  printf("\r\nListing files on each drive:\r\n");
+  printf("Drive 0: files:\r\n");
   list_files("0:/");
-  printf("Drive 1: files:\n");
+  printf("Drive 1: files:\r\n");
   list_files("1:/");
-  printf("Drive 2: files:\n");
+  printf("Drive 2: files:\r\n");
   list_files("2:/");
 
-  printf("\nFiles created on multiple logical drives\n");
-  printf("Note: All drives currently point to the same physical W25Q64\n");
-  printf("=============================\n");
+  printf("\r\nFiles created on multiple logical drives\r\n");
+  printf("Note: All drives currently point to the same physical W25Q128\r\n");
+  printf("=============================\r\n");
 }
 
 void show_partition_info(void) {
   FATFS *fs;
   DWORD fre_clust;
 
-  printf("\n=== Partition Information ===\n");
+  printf("\r\n=== Partition Information ===\r\n");
 
   // 获取分区信息
   FRESULT res = f_getfree(USERPath, &fre_clust, &fs);
   if (res == FR_OK) {
-    printf("Drive: %s\n", USERPath);
+    printf("Drive: %s\r\n", USERPath);
     const char *fs_type_name;
     if (fs->fs_type == FS_FAT12) {
       fs_type_name = "FAT12";
@@ -331,53 +334,53 @@ void show_partition_info(void) {
     } else {
       fs_type_name = "Unknown";
     }
-    printf("Partition Type: %s\n", fs_type_name);
+    printf("Partition Type: %s\r\n", fs_type_name);
 
     // 计算各个区域
     DWORD total_clusters = fs->n_fatent - 2;
     DWORD used_clusters = total_clusters - fre_clust;
     DWORD cluster_size_bytes = fs->csize * _MAX_SS;
 
-    printf("\n--- Partition Layout ---\n");
-    printf("Boot Sector:     Sector 0\n");
-    printf("FAT Tables:      Sector 1 - %lu\n", fs->fatbase + fs->fsize - 1);
-    printf("Root Directory:  Sector %lu\n", fs->dirbase);
-    printf("Data Area:       Sector %lu - %lu\n", fs->database,
+    printf("\r\n--- Partition Layout ---\r\n");
+    printf("Boot Sector:     Sector 0\r\n");
+    printf("FAT Tables:      Sector 1 - %lu\r\n", fs->fatbase + fs->fsize - 1);
+    printf("Root Directory:  Sector %lu\r\n", fs->dirbase);
+    printf("Data Area:       Sector %lu - %lu\r\n", fs->database,
            fs->database + (total_clusters * fs->csize) - 1);
 
-    printf("\n--- Space Usage ---\n");
-    printf("Total Capacity:  %.2f MB (%lu bytes)\n",
+    printf("\r\n--- Space Usage ---\r\n");
+    printf("Total Capacity:  %.2f MB (%lu bytes)\r\n",
            (float)(total_clusters * cluster_size_bytes) / (1024 * 1024),
            total_clusters * cluster_size_bytes);
-    printf("Used Space:      %.2f MB (%lu bytes)\n",
+    printf("Used Space:      %.2f MB (%lu bytes)\r\n",
            (float)(used_clusters * cluster_size_bytes) / (1024 * 1024),
            used_clusters * cluster_size_bytes);
-    printf("Free Space:      %.2f MB (%lu bytes)\n",
+    printf("Free Space:      %.2f MB (%lu bytes)\r\n",
            (float)(fre_clust * cluster_size_bytes) / (1024 * 1024),
            fre_clust * cluster_size_bytes);
-    printf("Usage:           %.1f%%\n",
+    printf("Usage:           %.1f%%\r\n",
            ((float)used_clusters / (float)total_clusters) * 100.0f);
 
-    printf("\n--- Cluster Information ---\n");
-    printf("Total Clusters:  %lu\n", total_clusters);
-    printf("Used Clusters:   %lu\n", used_clusters);
-    printf("Free Clusters:   %lu\n", fre_clust);
-    printf("Cluster Size:    %lu bytes (%d sectors)\n", cluster_size_bytes,
+    printf("\r\n--- Cluster Information ---\r\n");
+    printf("Total Clusters:  %lu\r\n", total_clusters);
+    printf("Used Clusters:   %lu\r\n", used_clusters);
+    printf("Free Clusters:   %lu\r\n", fre_clust);
+    printf("Cluster Size:    %lu bytes (%d sectors)\r\n", cluster_size_bytes,
            fs->csize);
 
-    printf("\n--- FAT Information ---\n");
-    printf("FAT Start:       Sector %lu\n", fs->fatbase);
-    printf("FAT Size:        %lu sectors per FAT\n", fs->fsize);
-    printf("Number of FATs:  %d\n", fs->n_fats);
-    printf("FAT Entries:     %lu\n", fs->n_fatent);
+    printf("\r\n--- FAT Information ---\r\n");
+    printf("FAT Start:       Sector %lu\r\n", fs->fatbase);
+    printf("FAT Size:        %lu sectors per FAT\r\n", fs->fsize);
+    printf("Number of FATs:  %d\r\n", fs->n_fats);
+    printf("FAT Entries:     %lu\r\n", fs->n_fatent);
 
   } else {
-    printf("Failed to get partition info (error: %d)\n", res);
+    printf("Failed to get partition info (error: %d)\r\n", res);
   }
 
-  printf("\n--- Files and Directories ---\n");
+  printf("\r\n--- Files and Directories ---\r\n");
   print_directory_tree("/", 0);
-  printf("===============================\n");
+  printf("===============================\r\n");
 }
 
 void show_filesystem_info(void) {
@@ -386,7 +389,7 @@ void show_filesystem_info(void) {
   DWORD fre_sect;
   DWORD tot_sect;
 
-  printf("\n=== File System Information ===\n");
+  printf("\r\n=== File System Information ===\r\n");
 
   // 获取文件系统信息
   FRESULT res = f_getfree(USERPath, &fre_clust, &filesystem);
@@ -394,10 +397,10 @@ void show_filesystem_info(void) {
     tot_sect = (filesystem->n_fatent - 2) * filesystem->csize;
     fre_sect = fre_clust * filesystem->csize;
 
-    printf("Debug info:\n");
-    printf("- FAT entries (n_fatent): %lu\n", filesystem->n_fatent);
-    printf("clusters: %lu\n", filesystem->n_fatent - 2);
-    printf("- Cluster size (csize): %d sectors\n", filesystem->csize);
+    printf("Debug info:\r\n");
+    printf("- FAT entries (n_fatent): %lu\r\n", filesystem->n_fatent);
+    printf("clusters: %lu\r\n", filesystem->n_fatent - 2);
+    printf("- Cluster size (csize): %d sectors\r\n", filesystem->csize);
 
     // 确定文件系统类型
     const char *fs_type_str = "Unknown";
@@ -409,22 +412,22 @@ void show_filesystem_info(void) {
       fs_type_str = "FAT32";
     }
 
-    printf("File system type: %s\n", fs_type_str);
-    printf("Cluster size: %d sectors\n", filesystem->csize);
-    printf("Total sectors: %lu\n", tot_sect);
-    printf("Free sectors: %lu\n", fre_sect);
-    printf("Total space: %.2f KB\n", (float)(tot_sect * _MAX_SS) / 1024);
-    printf("Free space: %.2f KB\n", (float)(fre_sect * _MAX_SS) / 1024);
-    printf("Used space: %.2f KB\n",
+    printf("File system type: %s\r\n", fs_type_str);
+    printf("Cluster size: %d sectors\r\n", filesystem->csize);
+    printf("Total sectors: %lu\r\n", tot_sect);
+    printf("Free sectors: %lu\r\n", fre_sect);
+    printf("Total space: %.2f KB\r\n", (float)(tot_sect * _MAX_SS) / 1024);
+    printf("Free space: %.2f KB\r\n", (float)(fre_sect * _MAX_SS) / 1024);
+    printf("Used space: %.2f KB\r\n",
            (float)((tot_sect - fre_sect) * _MAX_SS) / 1024);
   } else {
-    printf("Failed to get filesystem info (error: %d)\n", res);
+    printf("Failed to get filesystem info (error: %d)\r\n", res);
   }
 
-  printf("\n=== Directory Structure ===\n");
-  // print_directory_tree("/", 0);  // 暂时注释掉，可能导致卡死
-  printf("Directory tree disabled for debugging\n");
-  printf("=============================\n");
+  printf("\r\n=== Directory Structure ===\r\n");
+  print_directory_tree("/", 0); // 暂时注释掉，可能导致卡死
+  printf("Directory tree disabled for debugging\r\n");
+  printf("=============================\r\n");
 }
 
 /*

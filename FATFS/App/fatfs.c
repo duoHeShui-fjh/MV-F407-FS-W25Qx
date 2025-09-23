@@ -49,10 +49,10 @@ void MX_FATFS_Init(void)
   retUSER1 = FATFS_LinkDriver(&USER_Driver, USER1Path);
   retUSER2 = FATFS_LinkDriver(&USER_Driver, USER2Path);
 
-  printf("FatFS drivers linked:\n");
-  printf("- Drive %s: %s\n", USERPath, retUSER == 0 ? "OK" : "FAILED");
-  printf("- Drive %s: %s\n", USER1Path, retUSER1 == 0 ? "OK" : "FAILED");
-  printf("- Drive %s: %s\n", USER2Path, retUSER2 == 0 ? "OK" : "FAILED");
+  printf("FatFS drivers linked:\r\n");
+  printf("- Drive %s: %s\r\n", USERPath, retUSER == 0 ? "OK" : "FAILED");
+  printf("- Drive %s: %s\r\n", USER1Path, retUSER1 == 0 ? "OK" : "FAILED");
+  printf("- Drive %s: %s\r\n", USER2Path, retUSER2 == 0 ? "OK" : "FAILED");
   /* USER CODE END Init */
 }
 
