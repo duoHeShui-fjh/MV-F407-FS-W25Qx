@@ -138,7 +138,8 @@ void safe_init_filesystem(uint8_t force_reinit) {
       return;
     }
 
-    uint8_t format_res = f_mkfs(USERPath, FM_FAT, 0, work_buf, sizeof(work_buf));
+    uint8_t format_res =
+        f_mkfs(USERPath, FM_FAT, 0, work_buf, sizeof(work_buf));
     if (format_res == FR_OK) {
       log_info("Format success");
       mount_res = f_mount(&fs, USERPath, 1);
@@ -173,26 +174,122 @@ void print_directory_tree(char *path, int depth) {
       break;
 
     // 打印缩进
-    for (int i = 0; i < depth; i++) {
+    for (int i = 0; i < depth; i++)
       printf("  ");
-    }
 
     // 检查是否是目录
     if (info.fattrib & AM_DIR) {
       printf("[DIR] %s/\r\n", info.fname);
 
       // 构建完整路径
-      if (strcmp(path, USERPath) == 0) {
+      if (strcmp(path, USERPath) == 0)
         snprintf(full_path, sizeof(full_path), "/%s", info.fname);
-      } else {
+      else
         snprintf(full_path, sizeof(full_path), "%s/%s", path, info.fname);
-      }
 
       // 递归遍历子目录
       print_directory_tree(full_path, depth + 1);
     } else {
       // 显示文件大小
       printf("[FILE] %s (%lu bytes)\r\n", info.fname, info.fsize);
+    }
+  }
+
+  f_closedir(&dir);
+}
+
+// 递归打印指定目录下所有文件内容
+void print_all_file_contents(char *path, int depth) {
+  DIR dir;
+  FILINFO info;
+  char full_path[128];
+  char file_content[64]; // 减小缓冲区
+  UINT bytes_read = 0;
+
+  // 限制递归深度防止栈溢出
+  if (depth > 5) {
+    printf("Maximum depth reached, skipping deeper directories\r\n");
+    return;
+  }
+
+  FRESULT res = f_opendir(&dir, path);
+  if (res != FR_OK) {
+    log_error("Failed to open directory: %s (%d)", path, res);
+    return;
+  }
+
+  while (1) {
+    res = f_readdir(&dir, &info);
+    if (res != FR_OK || info.fname[0] == 0)
+      break;
+
+    // 打印缩进
+    for (int i = 0; i < depth; i++)
+      printf("  ");
+
+    // 检查是否是目录
+    if (info.fattrib & AM_DIR) {
+      printf("[DIR] %s/\r\n", info.fname);
+
+      // 构建完整路径
+      if (strcmp(path, USERPath) == 0)
+        snprintf(full_path, sizeof(full_path), "/%s", info.fname);
+      else
+        snprintf(full_path, sizeof(full_path), "%s/%s", path, info.fname);
+
+      printf("Entering directory: %s\r\n", full_path);
+      // 递归遍历子目录
+      print_all_file_contents(full_path, depth + 1);
+      printf("Exiting directory: %s\r\n", full_path);
+    } else {
+      // 构建完整文件路12径
+      if (strcmp(path, USERPath) == 0)
+        snprintf(full_path, sizeof(full_path), "/%s", info.fname);
+      else
+        snprintf(full_path, sizeof(full_path), "%s/%s", path, info.fname);
+
+      printf("[FILE] %s (%lu bytes):\r\n", info.fname, info.fsize);
+
+      // 跳过过大的文件以避免内存问题
+      if (info.fsize > 1024) {
+        for (int i = 0; i <= depth; i++)
+          printf("  ");
+        printf("Content: [File too large, skipped]\r\n");
+        continue;
+      }
+
+      // 打印文件内容
+      FIL file;
+      res = f_open(&file, full_path, FA_READ);
+      if (res == FR_OK) {
+        // 限制读取大小
+        UINT read_size = (info.fsize > sizeof(file_content) - 1)
+                             ? sizeof(file_content) - 1
+                             : info.fsize;
+
+        res = f_read(&file, file_content, read_size, &bytes_read);
+        if (res == FR_OK) {
+          file_content[bytes_read] = '\0';
+
+          for (int i = 0; i <= depth; i++)
+            printf("  ");
+          printf("Content: %s", file_content);
+
+          if (info.fsize > sizeof(file_content) - 1)
+            printf("... (truncated)\r\n");
+          else
+            printf("\r\n");
+        } else {
+          for (int i = 0; i <= depth; i++)
+            printf("  ");
+          printf("Error reading file: %d\r\n", res);
+        }
+        f_close(&file);
+      } else {
+        for (int i = 0; i <= depth; i++)
+          printf("  ");
+        printf("Error opening file: %d\r\n", res);
+      }
     }
   }
 
@@ -296,11 +393,35 @@ void show_partition_info(void) {
     log_error("Failed to get partition info: %d", res);
 }
 
-void show_directory_tree(void) {
+void show_directory_tree(char *path) {
   printf("===============================\r\n");
   printf("------- Directory Tree --------\r\n");
   // sync_filesystem();
-  printf("Root Directory: (/)\r\n");
-  print_directory_tree(USERPath, 0);
+
+  // 如果传入NULL或空字符串，使用根目录
+  if (path == NULL || strlen(path) == 0) {
+    path = USERPath;
+    printf("Root Directory: (/)\r\n");
+  } else {
+    printf("Directory: (%s)\r\n", path);
+  }
+
+  print_directory_tree(path, 0);
+  printf("===============================\r\n");
+}
+
+void show_all_file_contents(char *path) {
+  printf("===============================\r\n");
+  printf("---- All File Contents -------\r\n");
+
+  // 如果传入NULL或空字符串，使用根目录
+  if (path == NULL || strlen(path) == 0) {
+    path = USERPath;
+    printf("Root Directory: (/)\r\n");
+  } else {
+    printf("Directory: (%s)\r\n", path);
+  }
+
+  print_all_file_contents(path, 0);
   printf("===============================\r\n");
 }

@@ -58,9 +58,9 @@
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
-  .name = "defaultTask",
-  .stack_size = 1024 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+    .name = "defaultTask",
+    .stack_size = 2048 * 4,
+    .priority = (osPriority_t)osPriorityNormal,
 };
 /* Definitions for LED_R_TASK */
 osThreadId_t LED_R_TASKHandle;
@@ -153,18 +153,22 @@ void StartDefaultTask(void *argument)
   int cnt = 0;
 
   // 安全初始化文件系统 - 保护现有数据
-  safe_init_filesystem(0);
+  // safe_init_filesystem(0);
+  safe_init_filesystem(1);
 
   // 显示文件系统信息和目录结构
   show_partition_info();
-  show_directory_tree();
+  show_directory_tree(NULL);
+  // show_all_file_contents(NULL);
 
   // 演示文件系统功能
-  // demo_filesystem();
+  demo_filesystem();
 
-  // 显示分区信息和所有路径
-  osDelay(100);
-  // show_directory_tree();
+  // // 显示分区信息和所有路径
+  // osDelay(100);
+  show_partition_info();
+  show_directory_tree(NULL);
+  show_all_file_contents(NULL);
   /* Infinite loop */
   for (;;) {
     // printf("Hello World! %d\n", cnt);
