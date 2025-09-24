@@ -153,21 +153,29 @@ void StartDefaultTask(void *argument)
   int cnt = 0;
 
   // 安全初始化文件系统 - 保护现有数据
-  // safe_init_filesystem(0);
-  safe_init_filesystem(1);
+  safe_init_filesystem(0);
+  // safe_init_filesystem(1);
 
   // 显示文件系统信息和目录结构
-  show_partition_info();
-  show_directory_tree(NULL);
+  // show_partition_info("0:/");
+  // show_directory_tree(NULL);
   // show_all_file_contents(NULL);
 
   // 演示文件系统功能
-  demo_filesystem();
+  // demo_filesystem();
   // // 显示分区信息和所有路径
   // osDelay(100);
-  // show_partition_info();
-  show_directory_tree(NULL);
-  show_all_file_contents(NULL);
+  show_partition_info("0:/");
+  // show_directory_tree("0:/");
+  // show_all_file_contents("0:/");
+
+  show_partition_info("1:/");
+  // show_directory_tree("1:/");
+  // show_all_file_contents("1:/");
+
+  show_partition_info("2:/");
+  // show_directory_tree("2:/");
+  // show_all_file_contents("2:/");
   /* Infinite loop */
   for (;;) {
     // printf("Hello World! %d\n", cnt);

@@ -48,7 +48,7 @@ void create_directory(char *dir_name);
 void create_file(char *file_name, char *file_content);
 void list_files(char *path);
 void read_file(char *file_name, char *file_content);
-void show_partition_info(void);
+void show_partition_info(char *path);
 void show_directory_tree(char *path);
 void show_all_file_contents(char *path);
 void demo_filesystem(void);

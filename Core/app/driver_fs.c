@@ -26,7 +26,7 @@ void sync_filesystem(void) {
   // 刷新文件系统缓存
   FATFS *fs_ptr;
   DWORD free_clust;
-  f_getfree(USERPath, &free_clust, &fs_ptr);
+  f_getfree("0:/", &free_clust, &fs_ptr);
 }
 
 void create_directory(char *dir_name) {
@@ -113,21 +113,43 @@ void safe_init_filesystem(uint8_t force_reinit) {
   log_debug("Initializing disk...");
   disk_initialize(0);
 
+  // 多分区文件系统
+  static FATFS fs0, fs1, fs2;
+  char *drive_paths[] = {"0:/", "1:/", "2:/"};
+  FATFS *fs_objects[] = {&fs0, &fs1, &fs2};
+
   uint8_t mount_res;
   uint8_t should_format = 0;
 
   if (force_reinit) {
-    log_info("Force reinit filesystem");
+    log_info("Force reinit all filesystems");
     should_format = 1;
   } else {
-    log_debug("Checking existing filesystem");
-    mount_res = f_mount(&fs, USERPath, 1);
+    log_debug("Checking existing filesystems");
+    // 只检查主驱动器0
+    mount_res = f_mount(&fs0, "0:/", 1);
 
     if (mount_res == FR_OK) {
-      log_info("Filesystem mounted successfully");
+      log_info("Main filesystem (0:) mounted successfully");
+
+      // 挂载其他驱动器并检查结果
+      uint8_t mount1_res = f_mount(&fs1, "1:/", 1);
+      uint8_t mount2_res = f_mount(&fs2, "2:/", 1);
+
+      if (mount1_res == FR_OK)
+        log_info("Filesystem (1:) mounted successfully");
+      else
+        log_warn("Filesystem (1:) mount failed: %d", mount1_res);
+
+      if (mount2_res == FR_OK)
+        log_info("Filesystem (2:) mounted successfully");
+      else
+        log_warn("Filesystem (2:) mount failed: %d", mount2_res);
+
+      log_info("All filesystems mounted");
       return;
     } else {
-      log_info("Creating new filesystem");
+      log_info("Creating new filesystems");
       should_format = 1;
     }
   }
@@ -139,18 +161,44 @@ void safe_init_filesystem(uint8_t force_reinit) {
       return;
     }
 
-    uint8_t format_res =
-        f_mkfs(USERPath, FM_FAT, 0, work_buf, sizeof(work_buf));
-    if (format_res == FR_OK) {
-      log_info("Format success");
-      mount_res = f_mount(&fs, USERPath, 1);
-      if (mount_res == FR_OK) {
-        log_debug("Mount success");
-      } else {
-        log_warn("Mount failed: %d", mount_res);
+    // 创建分区表和格式化
+    DWORD partition_table[] = {40, 30, 30, 0}; // 确保每个分区至少30% (4.8MB)
+
+    log_info("Creating partition table...");
+    uint8_t fdisk_res = f_fdisk(0, partition_table, work_buf);
+
+    if (fdisk_res == FR_OK) {
+      log_info("Partition table created successfully");
+
+      // 格式化各个分区
+      for (int i = 0; i < 3; i++) {
+        log_info("Formatting drive %s", drive_paths[i]);
+
+        // 清理工作缓冲区
+        memset(work_buf, 0, sizeof(work_buf));
+
+        uint8_t format_res =
+            f_mkfs(drive_paths[i], FM_FAT, 0, work_buf, sizeof(work_buf));
+
+        if (format_res == FR_OK) {
+          log_info("Format success: %s", drive_paths[i]);
+          mount_res = f_mount(fs_objects[i], drive_paths[i], 1);
+          if (mount_res == FR_OK) {
+            log_info("Mount success: %s", drive_paths[i]);
+          } else {
+            log_warn("Mount failed: %s (%d)", drive_paths[i], mount_res);
+          }
+        } else {
+          log_error("Format failed: %s (%d)", drive_paths[i], format_res);
+          // 即使失败也继续下一个分区
+          continue;
+        }
+
+        // 添加短延时让系统稳定
+        osDelay(100);
       }
     } else {
-      log_error("Format failed: %d", format_res);
+      log_error("Failed to create partition table: %d", fdisk_res);
     }
   }
 }
@@ -183,7 +231,7 @@ void print_directory_tree(char *path, int depth) {
       printf("[DIR] %s/\r\n", info.fname);
 
       // 构建完整路径
-      if (strcmp(path, USERPath) == 0)
+      if (strcmp(path, "0:/") == 0)
         snprintf(full_path, sizeof(full_path), "/%s", info.fname);
       else
         snprintf(full_path, sizeof(full_path), "%s/%s", path, info.fname);
@@ -233,7 +281,7 @@ void print_all_file_contents(char *path, int depth) {
       printf("[DIR] %s/\r\n", info.fname);
 
       // 构建完整路径
-      if (strcmp(path, USERPath) == 0)
+      if (strcmp(path, "0:/") == 0)
         snprintf(full_path, sizeof(full_path), "/%s", info.fname);
       else
         snprintf(full_path, sizeof(full_path), "%s/%s", path, info.fname);
@@ -244,7 +292,7 @@ void print_all_file_contents(char *path, int depth) {
       printf("Exiting directory: %s\r\n", full_path);
     } else {
       // 构建完整文件路径
-      if (strcmp(path, USERPath) == 0)
+      if (strcmp(path, "0:/") == 0)
         snprintf(full_path, sizeof(full_path), "/%s", info.fname);
       else
         snprintf(full_path, sizeof(full_path), "%s/%s", path, info.fname);
@@ -304,7 +352,7 @@ void print_all_file_contents(char *path, int depth) {
 void demo_filesystem(void) {
   printf("--- Filesystem Demo ---\r\n");
   // 检查文件系统状态
-  printf("Drive %s status = %d\r\n", USERPath, disk_status(0));
+  printf("Drive %s status = %d\r\n", "0:/", disk_status(0));
 
   // 创建主要文件
   printf("Creating main files...\r\n");
@@ -328,11 +376,11 @@ void demo_filesystem(void) {
   // create_file("/backup.txt", "Backup file\r\n");
   // create_file("/backup/data1.txt", "Backup data 1\r\n");
   // create_file("/backup/data2.txt", "Backup data 2\r\n");
-  // create_file("/settings.txt", "Settings backup\r\n");
-  // create_file("1:/set2.txt", "Settings2 backup\r\n");
-  // create_file("2:/set3.txt", "Settings3 backup\r\n");
-  // create_file("0:/set4.txt", "Settings4 backup\r\n");
-  // create_file("0:/abc/set5.txt", "Settings5 backup\r\n");
+  create_file("/settings.txt", "Settings backup\r\n");
+  create_file("1:/set2.txt", "Settings2 backup\r\n");
+  create_file("2:/set3.txt", "Settings3 backup\r\n");
+  create_file("0:/set4.txt", "Settings4 backup\r\n");
+  create_file("0:/abc/set5.txt", "Settings5 backup\r\n");
   create_file("/1/set6.txt", "Settings6 backup\r\n");
   create_file("/1/2/set7.txt", "Settings7 backup\r\n");
   create_file("/1/2/3/set7.txt", "Settings7 backup\r\n");
@@ -350,16 +398,16 @@ void demo_filesystem(void) {
   sync_filesystem(); // 同步文件系统缓存以确保能看到所有文件
 }
 
-void show_partition_info(void) {
+void show_partition_info(char *path) {
   FATFS *fs;
   DWORD fre_clust;
 
   printf("\r\n=== Partition Information ===\r\n");
 
   // 获取分区信息
-  FRESULT res = f_getfree(USERPath, &fre_clust, &fs);
+  FRESULT res = f_getfree(path, &fre_clust, &fs);
   if (res == FR_OK) {
-    printf("Drive: %s\r\n", USERPath);
+    printf("Drive: %s\r\n", path);
     const char *fs_type_name;
     if (fs->fs_type == FS_FAT12) {
       fs_type_name = "FAT12";
@@ -421,7 +469,7 @@ void show_directory_tree(char *path) {
 
   // 如果传入NULL或空字符串，使用根目录
   if (path == NULL || strlen(path) == 0) {
-    path = USERPath;
+    path = "0:/";
     printf("Root Directory: (/)\r\n");
   } else {
     printf("Directory: (%s)\r\n", path);
@@ -437,7 +485,7 @@ void show_all_file_contents(char *path) {
 
   // 如果传入NULL或空字符串，使用根目录
   if (path == NULL || strlen(path) == 0) {
-    path = USERPath;
+    path = "0:/";
     printf("Root Directory: (/)\r\n");
   } else {
     printf("Directory: (%s)\r\n", path);
