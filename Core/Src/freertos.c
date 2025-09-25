@@ -82,14 +82,14 @@ const osThreadAttr_t LED_B_TASK_attributes = {
 osThreadId_t LOG_TASKHandle;
 const osThreadAttr_t LOG_TASK_attributes = {
   .name = "LOG_TASK",
-  .stack_size = 256 * 4,
+  .stack_size = 512 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for CMD_TASK */
 osThreadId_t CMD_TASKHandle;
 const osThreadAttr_t CMD_TASK_attributes = {
   .name = "CMD_TASK",
-  .stack_size = 256 * 4,
+  .stack_size = 512 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 

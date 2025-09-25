@@ -46,7 +46,6 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 
     # Add user sources here
-    Core/app/driver_fs.c
     Core/app/app.c
 
     # hal
@@ -58,6 +57,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     src/drivers/comm/driver_log.c
     src/drivers/comm/driver_cmd.c
     src/drivers/json/driver_json.c
+    src/drivers/fs/driver_fs.c
 
     # lib
     src/lib/cJSON/cJSON.c
@@ -76,6 +76,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     src/drivers/comm
     src/drivers/device
     src/drivers/json
+    src/drivers/fs
 
     src/lib/cJSON
     src/lib/SFUD/sfud/port

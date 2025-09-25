@@ -22,6 +22,7 @@ static const hal_gpio_interface_t *hal_gpio = NULL;
 
 static const driver_cmd_interface_t *cmd = NULL;
 static const driver_log_interface_t *logger = NULL;
+static const driver_fs_interface_t *fs = NULL;
 
 static const driver_json_interface_t *json = NULL;
 
@@ -33,6 +34,7 @@ void app_sys_init(void) {
   // 驱动层接口获取
   cmd = driver_cmd_get_interface();
   logger = driver_log_get_interface();
+  fs = driver_fs_get_interface();
 
   json = driver_json_get_interface();
 
@@ -43,34 +45,36 @@ void app_sys_init(void) {
   json->init();
 }
 
-void app_default_task(void) { 
-  /* USER CODE BEGIN StartDefaultTask */
-  sfud_init(); // W25Qxx通用接口初始化
-  int cnt = 0;
+void app_default_task(void) {
+  fs->init();
+  hal_delay->delay_ms(10);
+  fs->init_fs(0);
+  // fs->show_all_file_contents(NULL);
+  // fs->demo_filesystem();
+  // fs->show_directory_tree(NULL);
+  // fs->show_all_file_contents(NULL);
+  // fs->append_file("/log.txt", "Third line\n");
+  // fs->show_partition_info();
+  // fs->delete_file("/log.txt");
+  // fs->append_file("/log.txt", "Second line0\r\n");
+  char read_buf[100] = {0};
+  fs->read_file("/log.txt", read_buf);
+  hal_delay->delay_ms(10);
 
-  // // 安全初始化文件系统 - 保护现有数据
-  // safe_init_filesystem(0);
-  safe_init_filesystem(1);
+  fs->show_directory_tree(NULL);
+  fs->show_partition_info();
 
-  // // 显示文件系统信息和目录结构
-  show_partition_info();
-  show_directory_tree(NULL);
-  show_all_file_contents(NULL);
+  hal_delay->delay_ms(10);
+  log_info("full cnt:%d", logger->queue_full_count);
 
-  // // 演示文件系统功能
-  demo_filesystem();
-
-  // // // 显示分区信息和所有路径
-  // osDelay(100);
-  show_partition_info();
-  show_directory_tree(NULL);
-  show_all_file_contents(NULL);
   /* Infinite loop */
   for (;;) {
-    // printf("Hello World! %d\n", cnt);
-    cnt++;
-    osDelay(2000);
-  } 
+    // static int cnt = 0;
+    // printf("Hello World! %d\n", cnt++);
+    // log_info("full cnt:%d", logger->queue_full_count);
+
+    hal_delay->delay_ms(50000);
+  }
 }
 
 void app_led_r_task(void) {
