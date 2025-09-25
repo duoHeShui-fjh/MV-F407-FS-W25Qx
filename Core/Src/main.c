@@ -104,7 +104,6 @@ int main(void)
   MX_SPI1_Init();
   MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rx_buf, USART_REC_LEN);
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -172,19 +171,7 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-int _write(int fd, char *ptr, int len) {
-  // CDC_Transmit_FS((uint8_t *)ptr, len);
-  HAL_UART_Transmit(&huart3, (const uint8_t *)ptr, len, 0xFFFF);
-  return len;
-}
 
-void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
-  if (huart == &huart3) {
-    rx_len = Size;
-    HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rx_buf, USART_REC_LEN);
-    __HAL_DMA_DISABLE_IT(huart3.hdmarx, DMA_IT_HT);
-  }
-}
 /* USER CODE END 4 */
 
 /**

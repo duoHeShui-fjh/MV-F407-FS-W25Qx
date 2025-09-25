@@ -46,24 +46,43 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 
     # Add user sources here
-    Core/app/driver_flash.c
     Core/app/driver_fs.c
+    Core/app/app.c
 
-    src/lib/SFUD/sfud/port/sfud_port.c
+    # hal
+    src/hal/hal_delay.c
+    src/hal/hal_uart.c
+    src/hal/hal_gpio.c
 
+    # drivers
+    src/drivers/comm/driver_log.c
+    src/drivers/comm/driver_cmd.c
+    src/drivers/json/driver_json.c
+
+    # lib
+    src/lib/cJSON/cJSON.c
     src/lib/SFUD/sfud/src/sfud.c
     src/lib/SFUD/sfud/src/sfud_sfdp.c
+    src/lib/SFUD/sfud/port/sfud_port.c
 )
 
 # Add include paths
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
     # Add user defined include paths
-    Core/app
+    src/hal
 
+    src/drivers
+    src/drivers/comm
+    src/drivers/device
+    src/drivers/json
+
+    src/lib/cJSON
     src/lib/SFUD/sfud/port
     src/lib/SFUD/sfud/src
     src/lib/SFUD/sfud/inc
+
+    Core/app
 )
 
 # Add project symbols (macros)

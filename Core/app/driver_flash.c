@@ -5,21 +5,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#define LOG_INFO
-#define LOG_DEBUG
+#include "driver_log.h"
 
-// 条件编译的日志级别宏
-#ifdef LOG_DEBUG
-#define log_debug(format, ...) printf("[d]:" format "\r\n", ##__VA_ARGS__)
-#else
-#define log_debug(format, ...)
-#endif
-
-#ifdef LOG_INFO
-#define log_info(format, ...) printf("[i]:" format "\r\n", ##__VA_ARGS__)
-#else
-#define log_info(format, ...)
-#endif
 static void flash_erase_impl(uint16_t sector) {
   log_debug("erase sector %d", 0);
   const sfud_flash *flash = sfud_get_device(0);

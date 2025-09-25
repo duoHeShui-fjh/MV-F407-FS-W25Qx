@@ -25,7 +25,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "app.h"
+#include "cmsis_os2.h"
 #include "diskio.h"
+#include "driver_fs.h"
 #include "fatfs.h"
 #include "ffconf.h"
 #include "gpio.h"
@@ -33,7 +36,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "driver_fs.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -58,9 +60,9 @@
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
-    .name = "defaultTask",
-    .stack_size = 3072 * 4,
-    .priority = (osPriority_t)osPriorityNormal,
+  .name = "defaultTask",
+  .stack_size = 5000 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for LED_R_TASK */
 osThreadId_t LED_R_TASKHandle;
@@ -76,6 +78,20 @@ const osThreadAttr_t LED_B_TASK_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
+/* Definitions for LOG_TASK */
+osThreadId_t LOG_TASKHandle;
+const osThreadAttr_t LOG_TASK_attributes = {
+  .name = "LOG_TASK",
+  .stack_size = 256 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+/* Definitions for CMD_TASK */
+osThreadId_t CMD_TASKHandle;
+const osThreadAttr_t CMD_TASK_attributes = {
+  .name = "CMD_TASK",
+  .stack_size = 256 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -85,6 +101,8 @@ const osThreadAttr_t LED_B_TASK_attributes = {
 void StartDefaultTask(void *argument);
 void os_led_r_task(void *argument);
 void os_led_b_task(void *argument);
+void os_log_task(void *argument);
+void os_cmd_task(void *argument);
 
 extern void MX_USB_DEVICE_Init(void);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
@@ -96,7 +114,7 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
-
+  app_sys_init();
   /* USER CODE END Init */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -125,6 +143,12 @@ void MX_FREERTOS_Init(void) {
   /* creation of LED_B_TASK */
   LED_B_TASKHandle = osThreadNew(os_led_b_task, NULL, &LED_B_TASK_attributes);
 
+  /* creation of LOG_TASK */
+  LOG_TASKHandle = osThreadNew(os_log_task, NULL, &LOG_TASK_attributes);
+
+  /* creation of CMD_TASK */
+  CMD_TASKHandle = osThreadNew(os_cmd_task, NULL, &CMD_TASK_attributes);
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -149,31 +173,12 @@ void StartDefaultTask(void *argument)
   /* init code for USB_DEVICE */
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN StartDefaultTask */
-  sfud_init(); // W25Qxx通用接口初始化
-  int cnt = 0;
-
-  // 安全初始化文件系统 - 保护现有数据
-  // safe_init_filesystem(0);
-  safe_init_filesystem(1);
-
-  // 显示文件系统信息和目录结构
-  show_partition_info();
-  show_directory_tree(NULL);
-  // show_all_file_contents(NULL);
-
-  // 演示文件系统功能
-  demo_filesystem();
-
-  // // 显示分区信息和所有路径
-  // osDelay(100);
-  show_partition_info();
-  show_directory_tree(NULL);
-  show_all_file_contents(NULL);
+  UNUSED(argument);
+  app_default_task();
+  osThreadExit();
   /* Infinite loop */
   for (;;) {
-    // printf("Hello World! %d\n", cnt);
-    cnt++;
-    osDelay(2000);
+    osDelay(osWaitForever);
   }
   /* USER CODE END StartDefaultTask */
 }
@@ -188,10 +193,12 @@ void StartDefaultTask(void *argument)
 void os_led_r_task(void *argument)
 {
   /* USER CODE BEGIN os_led_r_task */
+  UNUSED(argument);
+  app_led_r_task();
+  osThreadExit();
   /* Infinite loop */
   for (;;) {
-    HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin);
-    osDelay(100);
+    osDelay(osWaitForever);
   }
   /* USER CODE END os_led_r_task */
 }
@@ -206,12 +213,54 @@ void os_led_r_task(void *argument)
 void os_led_b_task(void *argument)
 {
   /* USER CODE BEGIN os_led_b_task */
+  UNUSED(argument);
+  app_led_b_task();
+  osThreadExit();
   /* Infinite loop */
   for (;;) {
-    HAL_GPIO_TogglePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin);
-    osDelay(100);
+    osDelay(osWaitForever);
   }
   /* USER CODE END os_led_b_task */
+}
+
+/* USER CODE BEGIN Header_os_log_task */
+/**
+ * @brief Function implementing the LOG_TASK thread.
+ * @param argument: Not used
+ * @retval None
+ */
+/* USER CODE END Header_os_log_task */
+void os_log_task(void *argument)
+{
+  /* USER CODE BEGIN os_log_task */
+  UNUSED(argument);
+  app_log_task();
+  osThreadExit();
+  /* Infinite loop */
+  for (;;) {
+    osDelay(osWaitForever);
+  }
+  /* USER CODE END os_log_task */
+}
+
+/* USER CODE BEGIN Header_os_cmd_task */
+/**
+ * @brief Function implementing the CMD_TASK thread.
+ * @param argument: Not used
+ * @retval None
+ */
+/* USER CODE END Header_os_cmd_task */
+void os_cmd_task(void *argument)
+{
+  /* USER CODE BEGIN os_cmd_task */
+  UNUSED(argument);
+  app_cmd_task();
+  osThreadExit();
+  /* Infinite loop */
+  for (;;) {
+    osDelay(osWaitForever);
+  }
+  /* USER CODE END os_cmd_task */
 }
 
 /* Private application code --------------------------------------------------*/

@@ -32,7 +32,7 @@
 /* USER CODE END Includes */
 
 extern uint8_t retUSER; /* Return value for USER */
-extern char USERPath[1]; /* USER logical drive path */
+extern char USERPath[4]; /* USER logical drive path */
 extern FATFS USERFatFS; /* File system object for USER logical drive */
 extern FIL USERFile; /* File object for USER */
 

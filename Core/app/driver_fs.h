@@ -4,36 +4,7 @@
 #include "sfud.h"
 #include <stdio.h>
 
-// 日志级别控制
-#define LOG_INFO
-#define LOG_WARN
-#define LOG_ERROR
-// #define LOG_DEBUG
-
-// 日志宏定义
-#ifdef LOG_DEBUG
-#define log_debug(format, ...) printf("[d]:" format "\r\n", ##__VA_ARGS__)
-#else
-#define log_debug(format, ...)
-#endif
-
-#ifdef LOG_INFO
-#define log_info(format, ...) printf("[i]:" format "\r\n", ##__VA_ARGS__)
-#else
-#define log_info(format, ...)
-#endif
-
-#ifdef LOG_WARN
-#define log_warn(format, ...) printf("[w]:" format "\r\n", ##__VA_ARGS__)
-#else
-#define log_warn(format, ...)
-#endif
-
-#ifdef LOG_ERROR
-#define log_error(format, ...) printf("[e]:" format "\r\n", ##__VA_ARGS__)
-#else
-#define log_error(format, ...)
-#endif
+#include "driver_log.h"
 
 typedef struct {
 

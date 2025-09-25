@@ -47,11 +47,10 @@ uint8_t FATFS_LinkDriverEx(const Diskio_drvTypeDef *drv, char *path, uint8_t lun
     disk.drv[disk.nbr] = drv;
     disk.lun[disk.nbr] = lun;
     DiskNum = disk.nbr++;
-    UNUSED(DiskNum);
-    // path[0] = DiskNum + '0';
-    // path[1] = ':';
-    // path[2] = '/';
-    // path[3] = 0;
+    path[0] = DiskNum + '0';
+    path[1] = ':';
+    path[2] = '/';
+    path[3] = 0;
     ret = 0;
   }
 
