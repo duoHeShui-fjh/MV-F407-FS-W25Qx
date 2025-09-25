@@ -22,7 +22,7 @@ MCU_TYPE = $(shell grep -o 'STM32F[0-9][0-9][0-9]' cmake/stm32cubemx/CMakeLists.
 
 
 # 默认目标
-.PHONY: default clean build release flash flash-release c b f cb bf cbf objdump bin hex all
+.PHONY: default clean build release flash flash-release c b f cb bf cbf objdump bin hex all clangd
 
 default: build
 c: clean
@@ -119,3 +119,8 @@ release:
 	else \
 		echo "Release构建完成"; \
 	fi
+
+
+clangd: 
+	@rm -rf compile_commands.json
+	@cp $(BUILD_DIR_DEBUG)/compile_commands.json .
